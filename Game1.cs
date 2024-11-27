@@ -14,7 +14,9 @@ public class Game1 : Game
 
     Rectangle paddleleft = new Rectangle(10,200,20,100);
     Rectangle paddleright = new Rectangle(770,200,20,100);
-    Rectangle ball = new Rectangle(390,230,20,20);
+
+    Ball ball;
+   
     float velocityX = 1;
     float velocityY = 1;
     int ScoreRightPlayer = 0;
@@ -37,9 +39,11 @@ public class Game1 : Game
     {
         _spriteBatch = new SpriteBatch(GraphicsDevice);
 
+
         // TODO: use this.Content to load your game content here
         pixel = Content.Load<Texture2D>(assetName:"pixel");
         fontscore = Content.Load<SpriteFont>("score");
+        ball = new Ball(pixel);
     }
 
     protected override void Update(GameTime gameTime)
@@ -63,28 +67,37 @@ public class Game1 : Game
         // TODO: Add your update logic here
 
         base.Update(gameTime);
-        ball.Y += (int)velocityY;
-        ball.X += (int)velocityX;
-        if(ball.Intersects(paddleright) || ball.Intersects(paddleleft)){
+        if(ball.Rectangle.Intersects(paddleright) || ball.Rectangle.Intersects(paddleleft)){
             velocityX *= -1.1f;
             velocityY *= 1.1f;
         }
-        ball.X += (int)velocityX;
-        if(ball.Intersects(paddleright) || ball.Intersects(paddleleft)){
+       
+        if(ball.Rectangle.Intersects(paddleright) || ball.Rectangle.Intersects(paddleleft)){
             velocityY *= -1.1f;
             
         }
 
-        if(ball.Y <= 0 || ball.Y + ball.Height>= 480){
+        if(ball.Rectangle.Y <= 0 || ball.Rectangle.Y + ball.Rectangle.Height>= 480){
             velocityY *= -1.1f;
         }
-        if(ball.X <= 0 || ball.X + ball.Width >= 800){
-            ball.X=390;
-            ball.Y=230;
-            velocityX = 2;
-            velocityY = 2;
+
+        ball.Update();
+        if(ball.Rectangle.X <= 0 ){
+            ball.Reset();
+            ScoreRightPlayer++;
         }
-        
+        if(ball.Rectangle.X + ball.Rectangle.Width >= 800){
+            ball.Reset();
+            ScoreLeftPlayer++;
+        }
+        if(ScoreLeftPlayer>=10 || ScoreRightPlayer>=10){
+            ScoreLeftPlayer=0;
+            ScoreRightPlayer=0;
+        }
+        if(kState.IsKeyDown(key:Keys.Q)){
+            ScoreLeftPlayer+=1;
+            ball.Reset();
+        }
     }     
 
     protected override void Draw(GameTime gameTime)
@@ -97,7 +110,7 @@ public class Game1 : Game
         _spriteBatch.DrawString(fontscore,ScoreRightPlayer.ToString(),new Vector2(720,10), Color.BlueViolet);
         _spriteBatch.Draw(pixel,paddleleft,Color.HotPink);
         _spriteBatch.Draw(pixel,paddleright,Color.Blue);
-        _spriteBatch.Draw(pixel,ball,Color.LightGoldenrodYellow);
+        ball.Draw(_spriteBatch);
         _spriteBatch.End();
         base.Draw(gameTime);
     }
