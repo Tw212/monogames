@@ -12,15 +12,16 @@ public class Game1 : Game
     Texture2D pixel;
     SpriteFont fontscore;
 
-    Rectangle paddleleft = new Rectangle(10,200,20,100);
-    Rectangle paddleright = new Rectangle(770,200,20,100);
-
+    Paddle paddleleft;
+    Paddle paddleright;
     Ball ball;
    
     float velocityX = 1;
     float velocityY = 1;
     int ScoreRightPlayer = 0;
     int ScoreLeftPlayer = 0;
+
+    KeyboardState oldKState;
     public Game1()
     {
         _graphics = new GraphicsDeviceManager(this);
@@ -44,6 +45,8 @@ public class Game1 : Game
         pixel = Content.Load<Texture2D>(assetName:"pixel");
         fontscore = Content.Load<SpriteFont>("score");
         ball = new Ball(pixel);
+        paddleleft = new Paddle(pixel, new Rectangle(10,200,20,100), Keys.W, Keys.S);
+        paddleright = new Paddle(pixel, new Rectangle(770,200,20,100), Keys.Up, Keys.Down);
     }
 
     protected override void Update(GameTime gameTime)
@@ -51,35 +54,22 @@ public class Game1 : Game
         if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
             Exit();
 
-        KeyboardState kState= Keyboard.GetState();
-        if(kState.IsKeyDown(key:Keys.W) && paddleleft.Y > 0){
-            paddleleft.Y-= 10;
-        }
-        if(kState.IsKeyDown(key:Keys.S) && paddleleft.Y + paddleleft.Height < 480){
-            paddleleft.Y+= 10;
-        }
-        if(kState.IsKeyDown(key:Keys.Up) && paddleright.Y > 0){
-            paddleright.Y-= 10;
-        }
-        if(kState.IsKeyDown(key:Keys.Down) && paddleright.Y + paddleright.Height< 480){
-            paddleright.Y+= 10;
-        }
+        paddleleft.Update();
+        paddleright.Update();
         // TODO: Add your update logic here
-
+         KeyboardState kState = Keyboard.GetState();
         base.Update(gameTime);
-        if(ball.Rectangle.Intersects(paddleright) || ball.Rectangle.Intersects(paddleleft)){
-            velocityX *= -1.1f;
-            velocityY *= 1.1f;
-        }
-       
-        if(ball.Rectangle.Intersects(paddleright) || ball.Rectangle.Intersects(paddleleft)){
-            velocityY *= -1.1f;
-            
+        
+
+   
+        if(paddleleft.Rectangle.Intersects(ball.Rectangle) || paddleright.Rectangle.Intersects(ball.Rectangle)){
+            ball.Bounce();
         }
 
         if(ball.Rectangle.Y <= 0 || ball.Rectangle.Y + ball.Rectangle.Height>= 480){
             velocityY *= -1.1f;
         }
+        
 
         ball.Update();
         if(ball.Rectangle.X <= 0 ){
@@ -94,10 +84,18 @@ public class Game1 : Game
             ScoreLeftPlayer=0;
             ScoreRightPlayer=0;
         }
-        if(kState.IsKeyDown(key:Keys.Q)){
-            ScoreLeftPlayer+=1;
+       
+        if(kState.IsKeyDown(key:Keys.Q) && oldKState.IsKeyUp(Keys.Q)){
+            ScoreLeftPlayer++;
             ball.Reset();
         }
+        if(kState.IsKeyDown(key:Keys.R)&& oldKState.IsKeyUp(Keys.R)){
+            ball.Reset();
+            ScoreLeftPlayer=0;
+            ScoreRightPlayer=0;
+        }
+        
+        oldKState = kState;
     }     
 
     protected override void Draw(GameTime gameTime)
@@ -106,11 +104,11 @@ public class Game1 : Game
 
         // TODO: Add your drawing code here
         _spriteBatch.Begin();
-        _spriteBatch.DrawString(fontscore,ScoreLeftPlayer.ToString(),new Vector2(10,10), Color.Black);
-        _spriteBatch.DrawString(fontscore,ScoreRightPlayer.ToString(),new Vector2(720,10), Color.BlueViolet);
-        _spriteBatch.Draw(pixel,paddleleft,Color.HotPink);
-        _spriteBatch.Draw(pixel,paddleright,Color.Blue);
+        _spriteBatch.DrawString(fontscore,ScoreLeftPlayer.ToString(),new Vector2(10,10), Color.Purple);
+        _spriteBatch.DrawString(fontscore,ScoreRightPlayer.ToString(),new Vector2(720,10), Color.Purple);
         ball.Draw(_spriteBatch);
+        paddleleft.Draw(_spriteBatch);
+        paddleright.Draw(_spriteBatch);
         _spriteBatch.End();
         base.Draw(gameTime);
     }
